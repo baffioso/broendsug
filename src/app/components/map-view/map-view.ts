@@ -32,6 +32,7 @@ export class MapView implements AfterViewInit {
 
   // Layer visibility signals
   protected readonly showAnlaegsprojekter = signal(false);
+  protected readonly showRaadenOverVej = signal(false);
 
   constructor() {
     effect(() => {
@@ -118,6 +119,82 @@ export class MapView implements AfterViewInit {
         }
       }
     });
+
+    // Effect to toggle råden over vej layer visibility
+    effect(() => {
+      const visible = this.showRaadenOverVej();
+      const filter = this.dataService.filter();
+
+      if (this.map && this.mapLoaded()) {
+        if (visible) {
+          if (!this.map.getLayer('raaden-over-vej-fill')) {
+            this.map.addLayer({
+              id: 'raaden-over-vej-fill',
+              type: 'fill',
+              source: 'raaden_over_vej',
+              paint: {
+                'fill-color': '#0000ff',
+                'fill-opacity': 0.3,
+              },
+            });
+          }
+          if (!this.map.getLayer('raaden-over-vej-line')) {
+            this.map.addLayer({
+              id: 'raaden-over-vej-line',
+              type: 'line',
+              source: 'raaden_over_vej',
+              paint: {
+                'line-color': '#0000ff',
+                'line-width': 2,
+              },
+            });
+          }
+
+          // Apply date filter if present
+          if (filter.dateRange) {
+            const { start, end } = filter.dateRange;
+            const conditions: any[] = ['all'];
+
+            if (start) {
+              // Project end must be >= Filter start (or null)
+              conditions.push([
+                'any',
+                ['!', ['has', 'projekt_slut']],
+                ['>=', ['get', 'projekt_slut'], start.toISOString()]
+              ]);
+            }
+
+            if (end) {
+              // Project start must be <= Filter end (or null)
+              conditions.push([
+                'any',
+                ['!', ['has', 'projekt_start']],
+                ['<=', ['get', 'projekt_start'], end.toISOString()]
+              ]);
+            }
+
+            if (conditions.length > 1) {
+              this.map.setFilter('raaden-over-vej-fill', conditions as maplibregl.FilterSpecification);
+              this.map.setFilter('raaden-over-vej-line', conditions as maplibregl.FilterSpecification);
+            } else {
+              this.map.setFilter('raaden-over-vej-fill', null);
+              this.map.setFilter('raaden-over-vej-line', null);
+            }
+          } else {
+            this.map.setFilter('raaden-over-vej-fill', null);
+            this.map.setFilter('raaden-over-vej-line', null);
+          }
+
+        } else {
+          if (this.map.getLayer('raaden-over-vej-line')) {
+            this.map.removeLayer('raaden-over-vej-line');
+          }
+          if (this.map.getLayer('raaden-over-vej-fill')) {
+            this.map.removeLayer('raaden-over-vej-fill');
+          }
+        }
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -149,6 +226,11 @@ export class MapView implements AfterViewInit {
     this.map.addSource('anlaegsprojekter', {
       type: 'geojson',
       data: 'https://wfs-kbhkort.kk.dk/k101/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=k101%3Aanlaegsprojekter&outputFormat=application%2Fjson&srsName=EPSG:4326',
+    });
+
+    this.map.addSource('raaden_over_vej', {
+      type: 'geojson',
+      data: 'https://wfs-kbhkort.kk.dk/k101/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=k101%3Araaden_over_vej_events_anonym_aktuelt&outputFormat=application%2Fjson&srsName=EPSG:4326',
     });
 
     // Add GeoJSON source without clustering
@@ -315,6 +397,35 @@ export class MapView implements AfterViewInit {
       if (this.map) this.map.getCanvas().style.cursor = 'pointer';
     });
     this.map.on('mouseleave', 'anlaegsprojekter-fill', () => {
+      if (this.map) this.map.getCanvas().style.cursor = '';
+    });
+
+    // Add click handler for råden over vej
+    this.map.on('click', 'raaden-over-vej-fill', (e) => {
+      if (!e.features || e.features.length === 0) return;
+
+      const props = e.features[0].properties;
+
+      new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(
+          `
+          <div style="padding: 0.5rem; max-width: 300px;">
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">${props['sagstype'] || 'Råden over vej'}</h3>
+            <p style="margin: 0; font-size: 0.75rem; color: #666;">Kategori: ${props['kategori']}</p>
+            <p style="margin: 0; font-size: 0.75rem; color: #666;">Start: ${props['projekt_start']}</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #666;">Slut: ${props['projekt_slut']}</p>
+          </div>
+        `
+        )
+        .addTo(this.map!);
+    });
+
+    // Change cursor on hover for råden over vej
+    this.map.on('mouseenter', 'raaden-over-vej-fill', () => {
+      if (this.map) this.map.getCanvas().style.cursor = 'pointer';
+    });
+    this.map.on('mouseleave', 'raaden-over-vej-fill', () => {
       if (this.map) this.map.getCanvas().style.cursor = '';
     });
 

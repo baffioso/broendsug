@@ -10,4 +10,12 @@
     />
     Anlægsprojekter
   </label>
+  <label>
+    <input
+      type="checkbox"
+      [checked]="showRaadenOverVej()"
+      (change)="showRaadenOverVej.set(!showRaadenOverVej())"
+    />
+    Råden over vej
+  </label>
 </div>
