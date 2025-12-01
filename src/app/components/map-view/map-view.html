@@ -26,4 +26,7 @@
     />
     P-pladser
   </label>
+  <button (click)="showAerial.set(!showAerial())" style="margin-top: 10px;">
+    {{ showAerial() ? 'Skjul luftfoto' : 'Vis luftfoto' }}
+  </button>
 </div>

@@ -35,6 +35,7 @@ export class MapView implements AfterViewInit {
   protected readonly showAnlaegsprojekter = signal(false);
   protected readonly showRaadenOverVej = signal(false);
   protected readonly showPPladser = signal(false);
+  protected readonly showAerial = signal(false);
 
   constructor() {
     effect(() => {
@@ -261,6 +262,33 @@ export class MapView implements AfterViewInit {
         }
       }
     });
+
+    // Effect to toggle aerial layer visibility
+    effect(() => {
+      const visible = this.showAerial();
+
+      if (this.map && this.mapLoaded()) {
+        if (visible) {
+          if (!this.map.getLayer('aerial-layer')) {
+            // Add aerial layer before other layers (at the bottom)
+            // We need to find the first layer to insert before
+            this.map.addLayer(
+              {
+                id: 'aerial-layer',
+                type: 'raster',
+                source: 'aerial',
+                paint: {},
+              },
+              'brondgrupper-fill'
+            );
+          }
+        } else {
+          if (this.map.getLayer('aerial-layer')) {
+            this.map.removeLayer('aerial-layer');
+          }
+        }
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -271,7 +299,7 @@ export class MapView implements AfterViewInit {
     // Initialize map centered on Copenhagen
     this.map = new maplibregl.Map({
       container: this.mapContainer().nativeElement,
-      style: 'https://api.maptiler.com/maps/0199d392-bb1b-7927-8f94-3d5e6557f760/style.json?key=tiNMCb9CgsMttr9UGj47',
+      style: 'https://api.maptiler.com/maps/0199d3a4-ea47-7792-a223-d175afc7c9ab/style.json?key=tiNMCb9CgsMttr9UGj47',
       center: [12.5683, 55.6761], // Copenhagen coordinates
       zoom: 15,
     });
@@ -302,6 +330,14 @@ export class MapView implements AfterViewInit {
     this.map.addSource('p_pladser', {
       type: 'geojson',
       data: 'https://wfs-kbhkort.kk.dk/k101/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=k101%3Ap_pladser&outputFormat=application%2Fjson&srsName=EPSG:4326',
+    });
+
+    this.map.addSource('aerial', {
+      type: 'raster',
+      tiles: [
+        'https://services.datafordeler.dk/GeoDanmarkOrto/orto_foraar/1.0.0/WMS?username=DTMMBNXGMB&password=LvA$*001&VERSION=1.1.1&REQUEST=GetMap&BBOX={bbox-epsg-3857}&SRS=EPSG:3857&WIDTH=256&HEIGHT=256&LAYERS=orto_foraar&STYLES=&FORMAT=image/jpeg',
+      ],
+      tileSize: 256,
     });
 
     // Add GeoJSON source without clustering
