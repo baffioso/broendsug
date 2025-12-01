@@ -34,6 +34,7 @@ export class MapView implements AfterViewInit {
   // Layer visibility signals
   protected readonly showAnlaegsprojekter = signal(false);
   protected readonly showRaadenOverVej = signal(false);
+  protected readonly showPPladser = signal(false);
 
   constructor() {
     effect(() => {
@@ -213,6 +214,53 @@ export class MapView implements AfterViewInit {
         }
       }
     });
+
+    // Effect to toggle P-pladser layer visibility
+    effect(() => {
+      const visible = this.showPPladser();
+
+      if (this.map && this.mapLoaded()) {
+        if (visible) {
+          if (!this.map.getLayer('p-pladser-line')) {
+            this.map.addLayer({
+              id: 'p-pladser-line',
+              type: 'line',
+              source: 'p_pladser',
+              paint: {
+                'line-color': '#008000',
+                'line-width': 3,
+              },
+            });
+          }
+          if (!this.map.getLayer('p-pladser-label')) {
+            this.map.addLayer({
+              id: 'p-pladser-label',
+              type: 'symbol',
+              source: 'p_pladser',
+              layout: {
+                'text-field': ['to-string', ['get', 'antal_pladser']],
+                'text-size': 14,
+                'symbol-placement': 'line',
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
+              },
+              paint: {
+                'text-color': '#008000',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 2,
+              },
+            });
+          }
+        } else {
+          if (this.map.getLayer('p-pladser-line')) {
+            this.map.removeLayer('p-pladser-line');
+          }
+          if (this.map.getLayer('p-pladser-label')) {
+            this.map.removeLayer('p-pladser-label');
+          }
+        }
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -249,6 +297,11 @@ export class MapView implements AfterViewInit {
     this.map.addSource('raaden_over_vej', {
       type: 'geojson',
       data: 'https://wfs-kbhkort.kk.dk/k101/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=k101%3Araaden_over_vej_events_anonym_aktuelt&outputFormat=application%2Fjson&srsName=EPSG:4326',
+    });
+
+    this.map.addSource('p_pladser', {
+      type: 'geojson',
+      data: 'https://wfs-kbhkort.kk.dk/k101/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=k101%3Ap_pladser&outputFormat=application%2Fjson&srsName=EPSG:4326',
     });
 
     // Add GeoJSON source without clustering

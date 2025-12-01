@@ -18,4 +18,12 @@
     />
     Råden over vej
   </label>
+  <label>
+    <input
+      type="checkbox"
+      [checked]="showPPladser()"
+      (change)="showPPladser.set(!showPPladser())"
+    />
+    P-pladser
+  </label>
 </div>
