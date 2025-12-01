@@ -1,0 +1,80 @@
+<div class="list-container">
+	<!-- Search Filter -->
+	<div class="search-box">
+		<input
+			type="text"
+			placeholder="Søg efter vejnavn..."
+			[value]="searchQuery()"
+			(input)="onSearchChange($any($event.target).value)"
+			class="search-input"
+		/>
+		@if (searchQuery()) {
+			<button (click)="clearSearch()" class="clear-btn" type="button">
+				×
+			</button>
+		}
+	</div>
+
+	<!-- Summary -->
+	<div class="summary">
+		<span>{{ dataService.antalGrupper() }} grupper</span>
+		<span class="separator">•</span>
+		<span>{{ dataService.antalBroende() }} brønde</span>
+	</div>
+
+	<!-- Loading State -->
+	@if (dataService.isLoading()) {
+		<div class="loading-state">
+			<p>Indlæser brøndgrupper...</p>
+		</div>
+	}
+
+	<!-- Error State -->
+	@else if (dataService.error()) {
+		<div class="error-state">
+			<p>Fejl ved indlæsning af data</p>
+			<p class="error-message">{{ dataService.error()?.message }}</p>
+		</div>
+	}
+
+	<!-- Groups List -->
+	@else if (dataService.hasValue()) {
+		<div class="groups-list">
+			@for (gruppe of dataService.brondgrupper(); track gruppe.vejNavn) {
+				<div class="group-item">
+					<div class="group-header">
+						<h3 class="group-name">{{ gruppe.vejNavn }}</h3>
+						<span class="group-code">{{ gruppe.vejKode }}</span>
+					</div>
+					<div class="group-stats">
+						<div class="stat">
+							<span class="stat-value">{{ gruppe.statistik.antalBroende }}</span>
+							<span class="stat-label">brønde</span>
+						</div>
+						<div class="stat">
+							<span class="stat-value">{{ gruppe.statistik.antalPPladser }}</span>
+							<span class="stat-label">P-pladser</span>
+						</div>
+						<div class="stat">
+							<span class="stat-value">{{ gruppe.statistik.procentUdfoert }}%</span>
+							<span class="stat-label">udført</span>
+						</div>
+						@if (gruppe.statistik.antalDefekte > 0) {
+							<div class="stat stat-warning">
+								<span class="stat-value">{{ gruppe.statistik.antalDefekte }}</span>
+								<span class="stat-label">defekte</span>
+							</div>
+						}
+					</div>
+				</div>
+			} @empty {
+				<div class="empty-state">
+					<p>Ingen brøndgrupper fundet</p>
+					@if (searchQuery()) {
+						<button (click)="clearSearch()" class="link-btn">Ryd søgning</button>
+					}
+				</div>
+			}
+		</div>
+	}
+</div>
