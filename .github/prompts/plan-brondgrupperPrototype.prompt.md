@@ -5,7 +5,7 @@ Build a prototype Angular application with a split-view interface showing a list
 ## Steps
 
 1. **Initialize Angular project** with latest version, install MapLibre GL JS, and set up basic project structure with routing and core module
-2. **Define TypeScript models** for `Brond` (well), `Brondgruppe` (well group), and supporting types including vejnavn (street name), coordinates, P-pladser (parking), and status properties in [src/app/models/](path). I have provided sample data in [data/broende.geojson](path)
+2. **Define TypeScript models** for `Brond` (well), `Brondgruppe` (well group), and supporting types including vejnavn (street name), coordinates, P-pladser (parking), and status properties in [src/app/models/](path). I have provided sample data in [data/broende.geojson](path). Maybe you need to move it to assets/public folder.
 4. **Build split-view layout component** in [src/app/components/main-view/](path) with responsive grid layout (40/60 split) containing list panel and map panel containers
 5. **Implement brøndgrupper list component** in [src/app/components/brondgruppe-list/](path) displaying grouped wells with statistics (antal brønde, p-pladser, udførte/defekte status) and basic filtering
 6. **Integrate MapLibre map component** in [src/app/components/map-view/](path) to display brøndgrupper as clustered markers with color-coding based on completion status and hover/click interactions
