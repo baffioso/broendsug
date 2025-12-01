@@ -1,12 +1,22 @@
 <div class="main-view">
 	<aside class="list-panel">
 		<header class="panel-header">
-			<h1>Brøndgrupper</h1>
-			<p class="subtitle">Organiseret efter vejnavn</p>
+			<div class="header-content">
+				<h1>Brøndgrupper</h1>
+				<p class="subtitle">Organiseret efter vejnavn</p>
+			</div>
+			<button class="filter-btn" (click)="toggleFilterModal()" type="button" title="Filtrer">
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+				</svg>
+			</button>
 		</header>
 		<div class="panel-content">
 			<app-brondgruppe-list />
 		</div>
+		@if (showFilterModal()) {
+			<app-filter-modal (close)="showFilterModal.set(false)" />
+		}
 	</aside>
 
 	<main class="map-panel">

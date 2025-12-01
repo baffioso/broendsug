@@ -21,18 +21,41 @@
 	padding: 1.5rem 2rem;
 	border-bottom: 1px solid #e0e0e0;
 	background-color: #fff;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 
-	h1 {
-		margin: 0;
-		font-size: 1.5rem;
-		font-weight: 600;
-		color: #212121;
+	.header-content {
+		h1 {
+			margin: 0;
+			font-size: 1.5rem;
+			font-weight: 600;
+			color: #212121;
+		}
+
+		.subtitle {
+			margin: 0.25rem 0 0 0;
+			font-size: 0.875rem;
+			color: #757575;
+		}
 	}
 
-	.subtitle {
-		margin: 0.25rem 0 0 0;
-		font-size: 0.875rem;
+	.filter-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: white;
+		border: 1px solid #e0e0e0;
+		border-radius: 4px;
+		padding: 0.5rem;
+		cursor: pointer;
 		color: #757575;
+		transition: all 0.2s;
+
+		&:hover {
+			border-color: #2196f3;
+			color: #2196f3;
+		}
 	}
 }
 

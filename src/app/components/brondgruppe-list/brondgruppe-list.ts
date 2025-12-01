@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrondDataService } from '../../services';
-import { FilterModal } from '../filter-modal/filter-modal';
 
 @Component({
 	selector: 'app-brondgruppe-list',
-	imports: [FormsModule, FilterModal],
+	imports: [FormsModule],
 	templateUrl: './brondgruppe-list.html',
 	styleUrl: './brondgruppe-list.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,7 +12,6 @@ import { FilterModal } from '../filter-modal/filter-modal';
 export class BrondgruppeList {
 	protected readonly dataService = inject(BrondDataService);
 	protected readonly searchQuery = signal('');
-	protected readonly showFilterModal = signal(false);
 
 	onSearchChange(query: string): void {
 		this.searchQuery.set(query);
@@ -23,10 +21,6 @@ export class BrondgruppeList {
 	clearSearch(): void {
 		this.searchQuery.set('');
 		this.dataService.updateFilter({ vejNavnSearch: '' });
-	}
-
-	toggleFilterModal(): void {
-		this.showFilterModal.update((v) => !v);
 	}
 
 	zoomToGroup(gruppe: { vejKode: string; broende: Array<{ clusterId: number | null }> }): void {

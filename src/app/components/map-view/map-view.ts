@@ -160,6 +160,7 @@ export class MapView implements AfterViewInit {
               conditions.push([
                 'any',
                 ['!', ['has', 'projekt_slut']],
+                ['==', ['get', 'projekt_slut'], null],
                 ['>=', ['get', 'projekt_slut'], start.toISOString()]
               ]);
             }
@@ -169,6 +170,7 @@ export class MapView implements AfterViewInit {
               conditions.push([
                 'any',
                 ['!', ['has', 'projekt_start']],
+                ['==', ['get', 'projekt_start'], null],
                 ['<=', ['get', 'projekt_start'], end.toISOString()]
               ]);
             }
