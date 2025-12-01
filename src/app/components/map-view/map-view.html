@@ -26,7 +26,8 @@
     />
     P-pladser
   </label>
-  <button (click)="showAerial.set(!showAerial())" style="margin-top: 10px;">
-    {{ showAerial() ? 'Skjul luftfoto' : 'Vis luftfoto' }}
-  </button>
 </div>
+
+<button class="basemap-toggle" (click)="showAerial.set(!showAerial())" [title]="showAerial() ? 'Vis standardkort' : 'Vis luftfoto'">
+  <img [src]="showAerial() ? 'light.png' : 'ortofoto.png'" alt="Skift korttype" />
+</button>
