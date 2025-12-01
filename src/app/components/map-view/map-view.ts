@@ -2,10 +2,8 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
   inject,
-  Injector,
   signal,
   viewChild,
 } from '@angular/core';
@@ -23,8 +21,6 @@ import { FeatureCollection, Polygon } from 'geojson';
 })
 export class MapView implements AfterViewInit {
   private readonly dataService = inject(BrondDataService);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly injector = inject(Injector);
   private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
   private map?: maplibregl.Map;
@@ -472,14 +468,11 @@ export class MapView implements AfterViewInit {
           '#1f77b4',
         ],
         'circle-radius': 6,
-        'circle-stroke-width': 0.5,
-        'circle-stroke-color': '#ffffff',
         'circle-opacity': [
           'interpolate',
           ['linear'],
           ['zoom'],
-          13, 0.0,
-          16, 0.18,
+          16, 0,
           17, 1.0
         ],
       },
