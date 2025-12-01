@@ -46,25 +46,7 @@ export class MapView implements AfterViewInit {
     // Initialize map centered on Copenhagen
     this.map = new maplibregl.Map({
       container: this.mapContainer().nativeElement,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '&copy; OpenStreetMap Contributors',
-            maxzoom: 19,
-          },
-        },
-        layers: [
-          {
-            id: 'osm',
-            type: 'raster',
-            source: 'osm',
-          },
-        ],
-      },
+      style: 'https://api.maptiler.com/maps/0199d392-bb1b-7927-8f94-3d5e6557f760/style.json?key=tiNMCb9CgsMttr9UGj47',
       center: [12.5683, 55.6761], // Copenhagen coordinates
       zoom: 13,
     });
@@ -114,52 +96,8 @@ export class MapView implements AfterViewInit {
           '#1f77b4',
         ],
         'circle-radius': 6,
-        'circle-stroke-width': 2,
+        'circle-stroke-width': 0.5,
         'circle-stroke-color': '#ffffff',
-      },
-    });
-
-    // Add brøndgrupper polygon source
-    this.map.addSource('brondgrupper', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-    });
-
-    // Group fill layer
-    this.map.addLayer({
-      id: 'brondgrupper-fill',
-      type: 'fill',
-      source: 'brondgrupper',
-      paint: {
-        'fill-color': [
-          'match',
-          ['coalesce', ['get', 'color_index'], 0],
-          0, '#1f77b4',
-          1, '#ff7f0e',
-          2, '#2ca02c',
-          3, '#d62728',
-          4, '#9467bd',
-          5, '#8c564b',
-          6, '#e377c2',
-          7, '#7f7f7f',
-          8, '#bcbd22',
-          9, '#17becf',
-          10, '#e41a1c',
-          11, '#4daf4a',
-          '#1f77b4',
-        ],
-        'fill-opacity': 0.15,
-      },
-    });
-
-    // Group outline layer
-    this.map.addLayer({
-      id: 'brondgrupper-outline',
-      type: 'line',
-      source: 'brondgrupper',
-      paint: {
-        'line-color': '#333',
-        'line-width': 1,
       },
     });
 
@@ -230,13 +168,6 @@ export class MapView implements AfterViewInit {
       type: 'FeatureCollection',
       features: features,
     });
-
-    // Update brøndgrupper polygons
-    const gruppeSource = this.map.getSource('brondgrupper') as maplibregl.GeoJSONSource;
-    if (gruppeSource) {
-      const fc: FeatureCollection<Polygon> = this.dataService.brondgrupperGeoJSON();
-      gruppeSource.setData(fc as any);
-    }
   }
 
   // Helper: fit map to a group's polygon bounds by cluster id

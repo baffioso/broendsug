@@ -207,8 +207,8 @@ export class BrondDataService {
 	private calculateStatistik(broende: Brond[]): BrondgruppeStatistik {
 		const antalBroende = broende.length;
 
-		// Count P-pladser (wells within 10m of parking)
-		const antalPPladser = broende.filter((b) => b.pPladsDistance <= 10).length;
+		// Count P-pladser (wells within 5m of parking)
+		const antalPPladser = broende.filter((b) => b.pPladsDistance <= 5).length;
 
 		// For prototype: mock some completion data
 		// In production, this would come from task/completion data
