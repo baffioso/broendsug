@@ -10,6 +10,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import * as maplibregl from 'maplibre-gl';
 import { BrondDataService } from '../../services';
+import { FeatureCollection, Polygon } from 'geojson';
 
 @Component({
   selector: 'app-map-view',
@@ -105,6 +106,50 @@ export class MapView implements AfterViewInit {
       },
     });
 
+    // Add brøndgrupper polygon source
+    this.map.addSource('brondgrupper', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+    });
+
+    // Group fill layer
+    this.map.addLayer({
+      id: 'brondgrupper-fill',
+      type: 'fill',
+      source: 'brondgrupper',
+      paint: {
+        'fill-color': [
+          'match',
+          ['coalesce', ['get', 'color_index'], 0],
+          0, '#1f77b4',
+          1, '#ff7f0e',
+          2, '#2ca02c',
+          3, '#d62728',
+          4, '#9467bd',
+          5, '#8c564b',
+          6, '#e377c2',
+          7, '#7f7f7f',
+          8, '#bcbd22',
+          9, '#17becf',
+          10, '#e41a1c',
+          11, '#4daf4a',
+          '#1f77b4',
+        ],
+        'fill-opacity': 0.15,
+      },
+    });
+
+    // Group outline layer
+    this.map.addLayer({
+      id: 'brondgrupper-outline',
+      type: 'line',
+      source: 'brondgrupper',
+      paint: {
+        'line-color': '#333',
+        'line-width': 1,
+      },
+    });
+
     // Add click handler for individual wells
     this.map.on('click', 'broende-point', (e) => {
       if (!e.features || e.features.length === 0) return;
@@ -172,5 +217,33 @@ export class MapView implements AfterViewInit {
       type: 'FeatureCollection',
       features: features,
     });
+
+    // Update brøndgrupper polygons
+    const gruppeSource = this.map.getSource('brondgrupper') as maplibregl.GeoJSONSource;
+    if (gruppeSource) {
+      const fc: FeatureCollection<Polygon> = this.dataService.brondgrupperGeoJSON();
+      gruppeSource.setData(fc as any);
+    }
+  }
+
+  // Helper: fit map to a group's polygon bounds by vejKode
+  zoomToGroup(vejKode: string): void {
+    if (!this.map) return;
+    const features = this.map.querySourceFeatures('brondgrupper');
+    const target = features.find((f) => f.properties && f.properties['id'] === vejKode);
+    if (!target) return;
+
+    const geom = target.geometry as any;
+    const coords = geom.coordinates.flat(2);
+    const lons = coords.map((c: number[]) => c[0]);
+    const lats = coords.map((c: number[]) => c[1]);
+    const minX = Math.min(...lons);
+    const maxX = Math.max(...lons);
+    const minY = Math.min(...lats);
+    const maxY = Math.max(...lats);
+    this.map.fitBounds([
+      [minX, minY],
+      [maxX, maxY],
+    ], { padding: 40, duration: 600 });
   }
 }

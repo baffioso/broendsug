@@ -1,6 +1,10 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { FeatureCollection } from 'geojson';
+import { Feature, FeatureCollection, Point, Polygon } from 'geojson';
+import concave from '@turf/concave';
+import convex from '@turf/convex';
+import { bbox as turfBbox } from '@turf/bbox';
+import { point as turfPoint, featureCollection as turfFeatureCollection } from '@turf/helpers';
 import {
 	Brond,
 	BrondFeature,
@@ -97,6 +101,60 @@ export class BrondDataService {
 	readonly antalBroende = computed(() =>
 		this.brondgrupper().reduce((sum, g) => sum + g.statistik.antalBroende, 0)
 	);
+
+	// GeoJSON polygons for brøndgrupper using concave hull
+	readonly brondgrupperGeoJSON = computed<FeatureCollection<Polygon>>(() => {
+		// Group brønde by cluster_id for hull computation
+		const broende = this.broende();
+		const grupperByCluster = new Map<number, Brond[]>();
+		for (const b of broende) {
+			const key = b.clusterId ?? -1;
+			const arr = grupperByCluster.get(key) || [];
+			arr.push(b);
+			grupperByCluster.set(key, arr);
+		}
+
+		const features: Feature<Polygon>[] = [];
+		for (const [clusterId, gruppe] of grupperByCluster.entries()) {
+			// Require at least 3 points for a polygon
+			if (gruppe.length < 3) continue;
+			const pts: Feature<Point>[] = gruppe.map((b) => turfPoint([b.longitude, b.latitude]));
+			const fc = turfFeatureCollection(pts);
+			// Adaptive maxEdge: scale with group spread, clamped to [0.08km, 0.2km]
+			const bb = turfBbox(fc);
+			const [minX, minY, maxX, maxY] = bb;
+			// Rough spread as diagonal distance in degrees; map to km factor
+			const spreadDeg = Math.hypot(maxX - minX, maxY - minY);
+			let maxEdgeKm = 0.12; // default ~120m
+			if (spreadDeg > 0) {
+				maxEdgeKm = Math.min(0.2, Math.max(0.08, spreadDeg * 8));
+			}
+			let poly = concave(fc, { maxEdge: maxEdgeKm, units: 'kilometers' }) || convex(fc);
+			if (!poly) continue;
+
+			// Ensure geometry is Polygon (convert MultiPolygon by taking first polygon)
+			let polygonGeom: Polygon;
+			if (poly.geometry.type === 'Polygon') {
+				polygonGeom = poly.geometry as Polygon;
+			} else {
+				const mp = poly.geometry as any;
+				const first = mp.coordinates[0];
+				polygonGeom = { type: 'Polygon', coordinates: first } as Polygon;
+			}
+
+			features.push({
+				type: 'Feature',
+				geometry: polygonGeom,
+				properties: {
+					id: clusterId,
+					antal_broende: gruppe.length,
+					color_index: (clusterId ?? 0) % 12,
+				},
+			});
+		}
+
+		return { type: 'FeatureCollection', features };
+	});
 
 	/**
 	 * Update the filter criteria
