@@ -22,4 +22,27 @@ export class BrondgruppeList {
 		this.searchQuery.set('');
 		this.dataService.updateFilter({ vejNavnSearch: '' });
 	}
+
+	zoomToGroup(gruppe: { vejKode: string; broende: Array<{ clusterId: number | null }> }): void {
+		// Find the most common cluster_id in this group
+		const clusterCounts = new Map<number, number>();
+		for (const brond of gruppe.broende) {
+			if (brond.clusterId != null) {
+				clusterCounts.set(brond.clusterId, (clusterCounts.get(brond.clusterId) || 0) + 1);
+			}
+		}
+
+		// Get the cluster_id with the most brønde
+		let bestClusterId: number | null = null;
+		let maxCount = 0;
+		for (const [id, count] of clusterCounts) {
+			if (count > maxCount) {
+				maxCount = count;
+				bestClusterId = id;
+			}
+		}
+
+		console.log('zoomToGroup:', gruppe.vejKode, 'clusterId:', bestClusterId, 'count:', maxCount);
+		this.dataService.selectClusterId(bestClusterId);
+	}
 }

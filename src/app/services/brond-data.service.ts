@@ -17,6 +17,9 @@ import {
 	providedIn: 'root',
 })
 export class BrondDataService {
+	// Selected cluster id for map zoom
+	readonly selectedClusterId = signal<number | null>(null);
+
 	// Load GeoJSON data as a resource
 	private readonly broendeResource = httpResource<FeatureCollection>(
 		() => '/data/broende.geojson'
@@ -155,6 +158,13 @@ export class BrondDataService {
 
 		return { type: 'FeatureCollection', features };
 	});
+
+	/**
+	 * Select a cluster to zoom to on the map
+	 */
+	selectClusterId(clusterId: number | null): void {
+		this.selectedClusterId.set(clusterId);
+	}
 
 	/**
 	 * Update the filter criteria

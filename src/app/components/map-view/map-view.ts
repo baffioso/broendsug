@@ -5,9 +5,10 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  Injector,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { effect } from '@angular/core';
 import * as maplibregl from 'maplibre-gl';
 import { BrondDataService } from '../../services';
 import { FeatureCollection, Polygon } from 'geojson';
@@ -22,9 +23,20 @@ import { FeatureCollection, Polygon } from 'geojson';
 export class MapView implements AfterViewInit {
   private readonly dataService = inject(BrondDataService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
   private map?: maplibregl.Map;
+  private mapLoaded = false;
+
+  constructor() {
+    effect(() => {
+      const selected = this.dataService.selectedClusterId();
+      if (selected != null && this.mapLoaded) {
+        this.zoomToCluster(selected);
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
     this.initializeMap();
@@ -61,6 +73,7 @@ export class MapView implements AfterViewInit {
     this.map.addControl(new maplibregl.ScaleControl(), 'bottom-left');
 
     this.map.on('load', () => {
+      this.mapLoaded = true;
       this.addDataLayers();
     });
   }
@@ -226,24 +239,44 @@ export class MapView implements AfterViewInit {
     }
   }
 
-  // Helper: fit map to a group's polygon bounds by vejKode
-  zoomToGroup(vejKode: string): void {
-    if (!this.map) return;
-    const features = this.map.querySourceFeatures('brondgrupper');
-    const target = features.find((f) => f.properties && f.properties['id'] === vejKode);
-    if (!target) return;
+  // Helper: fit map to a group's polygon bounds by cluster id
+  zoomToCluster(clusterId: number): void {
+    console.log('zoomToCluster called with clusterId:', clusterId);
+    if (!this.map) {
+      console.warn('zoomToCluster: map not initialized');
+      return;
+    }
 
-    const geom = target.geometry as any;
-    const coords = geom.coordinates.flat(2);
-    const lons = coords.map((c: number[]) => c[0]);
-    const lats = coords.map((c: number[]) => c[1]);
+    // Query brondgrupperGeoJSON directly from the service
+    const fc = this.dataService.brondgrupperGeoJSON();
+    const target = fc.features.find((f) => f.properties?.['id'] === clusterId);
+    if (!target) {
+      console.warn('No polygon found for cluster_id:', clusterId, 'Available ids:', fc.features.map(f => f.properties?.['id']));
+      return;
+    }
+
+    // Extract all coordinates from the polygon (flatten the ring arrays)
+    const allCoords: number[][] = [];
+    for (const ring of target.geometry.coordinates) {
+      for (const coord of ring) {
+        allCoords.push(coord as number[]);
+      }
+    }
+    if (!allCoords.length) return;
+
+    const lons = allCoords.map((c) => c[0]);
+    const lats = allCoords.map((c) => c[1]);
     const minX = Math.min(...lons);
     const maxX = Math.max(...lons);
     const minY = Math.min(...lats);
     const maxY = Math.max(...lats);
-    this.map.fitBounds([
-      [minX, minY],
-      [maxX, maxY],
-    ], { padding: 40, duration: 600 });
+
+    this.map.fitBounds(
+      [
+        [minX, minY],
+        [maxX, maxY],
+      ],
+      { padding: 100}
+    );
   }
 }

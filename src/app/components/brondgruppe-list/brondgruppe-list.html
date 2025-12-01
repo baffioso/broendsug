@@ -41,7 +41,7 @@
 	@else if (dataService.hasValue()) {
 		<div class="groups-list">
 			@for (gruppe of dataService.brondgrupper(); track gruppe.vejNavn) {
-				<div class="group-item">
+				<div class="group-item" (click)="zoomToGroup(gruppe)">
 					<div class="group-header">
 						<h3 class="group-name">{{ gruppe.vejNavn }}</h3>
 						<span class="group-code">{{ gruppe.vejKode }}</span>
