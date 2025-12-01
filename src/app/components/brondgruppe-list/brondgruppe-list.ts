@@ -45,4 +45,11 @@ export class BrondgruppeList {
 		console.log('zoomToGroup:', gruppe.vejKode, 'clusterId:', bestClusterId, 'count:', maxCount);
 		this.dataService.selectClusterId(bestClusterId);
 	}
+
+	openStreetView(event: MouseEvent, gruppe: { centerPoint: { latitude: number; longitude: number } }): void {
+		event.stopPropagation(); // Prevent triggering zoomToGroup
+		const { latitude, longitude } = gruppe.centerPoint;
+		const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${latitude},${longitude}`;
+		window.open(url, '_blank');
+	}
 }
