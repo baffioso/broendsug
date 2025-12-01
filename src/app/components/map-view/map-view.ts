@@ -29,6 +29,7 @@ export class MapView implements AfterViewInit {
 
   private map?: maplibregl.Map;
   private readonly mapLoaded = signal(false);
+  private hasZoomedToInitialBounds = false;
 
   // Layer visibility signals
   protected readonly showAnlaegsprojekter = signal(false);
@@ -224,7 +225,7 @@ export class MapView implements AfterViewInit {
       container: this.mapContainer().nativeElement,
       style: 'https://api.maptiler.com/maps/0199d392-bb1b-7927-8f94-3d5e6557f760/style.json?key=tiNMCb9CgsMttr9UGj47',
       center: [12.5683, 55.6761], // Copenhagen coordinates
-      zoom: 13,
+      zoom: 15,
     });
 
     this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -520,6 +521,17 @@ export class MapView implements AfterViewInit {
       type: 'FeatureCollection',
       features: features,
     });
+
+    // Zoom to bounds of all points if not already zoomed
+    if (!this.hasZoomedToInitialBounds && features.length > 0) {
+      const bounds = new maplibregl.LngLatBounds();
+      features.forEach((f) => {
+        bounds.extend(f.geometry.coordinates as [number, number]);
+      });
+      this.map.fitBounds(bounds, { padding: 50 });
+      this.hasZoomedToInitialBounds = true;
+    }
+
     // Update brondgrupper polygons
     const gruppeSource = this.map.getSource('brondgrupper') as maplibregl.GeoJSONSource;
     if (gruppeSource) {
