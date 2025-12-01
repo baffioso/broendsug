@@ -3,6 +3,31 @@
 	height: 100%;
 }
 
+.layer-control {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	background: white;
+	padding: 10px;
+	border-radius: 4px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	z-index: 1;
+
+	h3 {
+		margin: 0 0 10px 0;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	label {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		cursor: pointer;
+	}
+}
+
 // Override MapLibre popup styles
 :host ::ng-deep {
 	.maplibregl-popup-content {

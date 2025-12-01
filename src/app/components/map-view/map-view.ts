@@ -6,6 +6,7 @@ import {
   ElementRef,
   inject,
   Injector,
+  signal,
   viewChild,
 } from '@angular/core';
 import { effect } from '@angular/core';
@@ -27,13 +28,94 @@ export class MapView implements AfterViewInit {
   private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
   private map?: maplibregl.Map;
-  private mapLoaded = false;
+  private readonly mapLoaded = signal(false);
+
+  // Layer visibility signals
+  protected readonly showAnlaegsprojekter = signal(false);
 
   constructor() {
     effect(() => {
       const selected = this.dataService.selectedClusterId();
-      if (selected != null && this.mapLoaded) {
+      if (selected != null && this.mapLoaded()) {
         this.zoomToCluster(selected);
+      }
+    });
+
+    // Effect to toggle anlægsprojekter layer visibility
+    effect(() => {
+      const visible = this.showAnlaegsprojekter();
+      const filter = this.dataService.filter();
+
+      if (this.map && this.mapLoaded()) {
+        if (visible) {
+          if (!this.map.getLayer('anlaegsprojekter-fill')) {
+            this.map.addLayer({
+              id: 'anlaegsprojekter-fill',
+              type: 'fill',
+              source: 'anlaegsprojekter',
+              paint: {
+                'fill-color': '#ff0000',
+                'fill-opacity': 0.3,
+              },
+            });
+          }
+          if (!this.map.getLayer('anlaegsprojekter-line')) {
+            this.map.addLayer({
+              id: 'anlaegsprojekter-line',
+              type: 'line',
+              source: 'anlaegsprojekter',
+              paint: {
+                'line-color': '#ff0000',
+                'line-width': 2,
+              },
+            });
+          }
+
+          // Apply date filter if present
+          if (filter.dateRange) {
+            const { start, end } = filter.dateRange;
+            const conditions: any[] = ['all'];
+
+            if (start) {
+              // Project end must be >= Filter start (or null)
+              // Using pv_ibrugtagning as end date
+              conditions.push([
+                'any',
+                ['!', ['has', 'pv_ibrugtagning']],
+                ['>=', ['get', 'pv_ibrugtagning'], start.toISOString()]
+              ]);
+            }
+
+            if (end) {
+              // Project start must be <= Filter end (or null)
+              // Using pv_projekt_start as start date
+              conditions.push([
+                'any',
+                ['!', ['has', 'pv_projekt_start']],
+                ['<=', ['get', 'pv_projekt_start'], end.toISOString()]
+              ]);
+            }
+
+            if (conditions.length > 1) {
+              this.map.setFilter('anlaegsprojekter-fill', conditions as maplibregl.FilterSpecification);
+              this.map.setFilter('anlaegsprojekter-line', conditions as maplibregl.FilterSpecification);
+            } else {
+              this.map.setFilter('anlaegsprojekter-fill', null);
+              this.map.setFilter('anlaegsprojekter-line', null);
+            }
+          } else {
+            this.map.setFilter('anlaegsprojekter-fill', null);
+            this.map.setFilter('anlaegsprojekter-line', null);
+          }
+
+        } else {
+          if (this.map.getLayer('anlaegsprojekter-line')) {
+            this.map.removeLayer('anlaegsprojekter-line');
+          }
+          if (this.map.getLayer('anlaegsprojekter-fill')) {
+            this.map.removeLayer('anlaegsprojekter-fill');
+          }
+        }
       }
     });
   }
@@ -55,13 +137,19 @@ export class MapView implements AfterViewInit {
     this.map.addControl(new maplibregl.ScaleControl(), 'bottom-left');
 
     this.map.on('load', () => {
-      this.mapLoaded = true;
       this.addDataLayers();
+      this.mapLoaded.set(true);
     });
   }
 
   private addDataLayers(): void {
     if (!this.map) return;
+
+    // Add Anlægsprojekter source
+    this.map.addSource('anlaegsprojekter', {
+      type: 'geojson',
+      data: 'https://wfs-kbhkort.kk.dk/k101/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=k101%3Aanlaegsprojekter&outputFormat=application%2Fjson&srsName=EPSG:4326',
+    });
 
     // Add GeoJSON source without clustering
     this.map.addSource('broende', {
@@ -198,6 +286,35 @@ export class MapView implements AfterViewInit {
       if (this.map) this.map.getCanvas().style.cursor = 'pointer';
     });
     this.map.on('mouseleave', 'broende-point', () => {
+      if (this.map) this.map.getCanvas().style.cursor = '';
+    });
+
+    // Add click handler for anlægsprojekter
+    this.map.on('click', 'anlaegsprojekter-fill', (e) => {
+      if (!e.features || e.features.length === 0) return;
+
+      const props = e.features[0].properties;
+
+      new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(
+          `
+          <div style="padding: 0.5rem; max-width: 300px;">
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">${props['navn'] || 'Anlægsprojekt'}</h3>
+            <p style="margin: 0; font-size: 0.75rem; color: #666;">ID: ${props['projektid']}</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #666;">Status: ${props['pv_projekt_status']}</p>
+            ${props['pv_om_projekt'] ? `<p style="margin: 0.5rem 0 0 0; font-size: 0.75rem;">${props['pv_om_projekt']}</p>` : ''}
+          </div>
+        `
+        )
+        .addTo(this.map!);
+    });
+
+    // Change cursor on hover for anlægsprojekter
+    this.map.on('mouseenter', 'anlaegsprojekter-fill', () => {
+      if (this.map) this.map.getCanvas().style.cursor = 'pointer';
+    });
+    this.map.on('mouseleave', 'anlaegsprojekter-fill', () => {
       if (this.map) this.map.getCanvas().style.cursor = '';
     });
 

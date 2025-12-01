@@ -1,0 +1,39 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Filtrering</h2>
+      <button class="close-btn" (click)="onClose()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="filter-group">
+        <label>Dato interval (Registrering)</label>
+        <div class="date-range">
+          <div class="date-input">
+            <label for="start-date">Fra</label>
+            <input
+              type="date"
+              id="start-date"
+              [ngModel]="startDate()"
+              (ngModelChange)="startDate.set($event)"
+            >
+          </div>
+          <div class="date-input">
+            <label for="end-date">Til</label>
+            <input
+              type="date"
+              id="end-date"
+              [ngModel]="endDate()"
+              (ngModelChange)="endDate.set($event)"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="reset-btn" (click)="reset()">Nulstil</button>
+      <button class="apply-btn" (click)="apply()">Anvend</button>
+    </div>
+  </div>
+</div>

@@ -6,7 +6,13 @@
 }
 
 .search-box {
-	position: relative;
+	display: flex;
+	gap: 0.5rem;
+
+	.input-wrapper {
+		position: relative;
+		flex: 1;
+	}
 
 	.search-input {
 		width: 100%;
@@ -42,6 +48,24 @@
 
 		&:hover {
 			color: #212121;
+		}
+	}
+
+	.filter-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: white;
+		border: 1px solid #e0e0e0;
+		border-radius: 4px;
+		padding: 0 0.75rem;
+		cursor: pointer;
+		color: #757575;
+		transition: all 0.2s;
+
+		&:hover {
+			border-color: #2196f3;
+			color: #2196f3;
 		}
 	}
 }

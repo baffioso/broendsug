@@ -1,1 +1,13 @@
 <div #mapContainer class="map-container"></div>
+
+<div class="layer-control">
+  <h3>Lag</h3>
+  <label>
+    <input
+      type="checkbox"
+      [checked]="showAnlaegsprojekter()"
+      (change)="showAnlaegsprojekter.set(!showAnlaegsprojekter())"
+    />
+    Anlægsprojekter
+  </label>
+</div>

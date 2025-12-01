@@ -33,4 +33,8 @@ export interface BrondgruppeFilter {
 	vejNavnSearch?: string;
 	minAntalBroende?: number;
 	statusFilter?: string[];
+	dateRange?: {
+		start: Date | null;
+		end: Date | null;
+	};
 }
