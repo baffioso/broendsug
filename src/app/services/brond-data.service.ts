@@ -60,6 +60,9 @@ export class BrondDataService {
 			([vejNavn, broende]) => {
 				const statistik = this.calculateStatistik(broende);
 				const centerPoint = this.calculateCenterPoint(broende);
+				// Determine execution year based on first brønd's clusterId (10% in 2025, 90% in 2026)
+				const clusterId = broende[0]?.clusterId ?? 0;
+				const udfoerelsesAar = (clusterId % 10 === 0) ? 2025 : 2026;
 
 				return {
 					vejNavn,
@@ -67,6 +70,7 @@ export class BrondDataService {
 					broende,
 					statistik,
 					centerPoint,
+					udfoerelsesAar,
 				};
 			}
 		);
@@ -89,6 +93,20 @@ export class BrondDataService {
 			grupper = grupper.filter((g) =>
 				g.broende.some((b) => filter.statusFilter!.includes(b.objektStatus))
 			);
+		}
+
+		// Apply date range filter
+		if (filter.dateRange) {
+			const startYear = filter.dateRange.start?.getFullYear();
+			const endYear = filter.dateRange.end?.getFullYear();
+
+			if (startYear && endYear) {
+				grupper = grupper.filter((g) => g.udfoerelsesAar >= startYear && g.udfoerelsesAar <= endYear);
+			} else if (startYear) {
+				grupper = grupper.filter((g) => g.udfoerelsesAar >= startYear);
+			} else if (endYear) {
+				grupper = grupper.filter((g) => g.udfoerelsesAar <= endYear);
+			}
 		}
 
 		// Sort by vejnavn

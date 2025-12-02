@@ -24,6 +24,8 @@ export interface Brondgruppe {
 		latitude: number;
 		longitude: number;
 	};
+	/** Execution year for the group */
+	udfoerelsesAar: number;
 }
 
 /**
