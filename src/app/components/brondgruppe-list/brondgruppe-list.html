@@ -53,25 +53,33 @@
 							<img src="/streetview.svg" alt="Street View" width="20" height="20">
 						</button>
 					</div>
-					<div class="group-stats">
-						<div class="stat">
-							<span class="stat-value">{{ gruppe.statistik.antalBroende }}</span>
-							<span class="stat-label">brønde</span>
-						</div>
-						<div class="stat">
-							<span class="stat-value">{{ gruppe.statistik.antalPPladser }}</span>
-							<span class="stat-label">P-pladser</span>
-						</div>
-						<div class="stat">
-							<span class="stat-value">{{ gruppe.statistik.procentUdfoert }}%</span>
-							<span class="stat-label">udført</span>
-						</div>
-						@if (gruppe.statistik.antalDefekte > 0) {
-							<div class="stat stat-warning">
-								<span class="stat-value">{{ gruppe.statistik.antalDefekte }}</span>
-								<span class="stat-label">defekte</span>
+                <div class="group-stats">
+						<div class="stats-left">
+							<div class="stat">
+								<span class="stat-value">{{ gruppe.statistik.antalBroende }}</span>
+								<span class="stat-label">brønde</span>
 							</div>
-						}
+							<div class="stat">
+								<span class="stat-value">{{ gruppe.statistik.antalPPladser }}</span>
+								<span class="stat-label">P-pladser</span>
+							</div>
+							<div class="stat">
+								<span class="stat-value">{{ gruppe.statistik.procentUdfoert }}%</span>
+								<span class="stat-label">udført</span>
+							</div>
+							@if (gruppe.statistik.antalDefekte > 0) {
+								<div class="stat stat-warning">
+									<span class="stat-value">{{ gruppe.statistik.antalDefekte }}</span>
+									<span class="stat-label">defekte</span>
+								</div>
+							}
+						</div>
+						<div class="stats-right">
+							<div class="stat">
+								<span class="stat-value">{{ gruppe.udfoerelsesAar }}</span>
+								<span class="stat-label">Udførelses år</span>
+							</div>
+						</div>
 					</div>
 				</div>
 			} @empty {

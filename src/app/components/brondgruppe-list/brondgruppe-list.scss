@@ -175,8 +175,20 @@
 
 .group-stats {
 	display: flex;
-	gap: 1.5rem;
-	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 1rem;
+
+	.stats-left {
+		display: flex;
+		gap: 1.5rem;
+		flex-wrap: wrap;
+	}
+
+	.stats-right {
+		display: flex;
+		align-items: flex-start;
+	}
 }
 
 .stat {
