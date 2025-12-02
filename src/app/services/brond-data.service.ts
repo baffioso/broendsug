@@ -109,6 +109,7 @@ export class BrondDataService {
 	readonly brondgrupperGeoJSON = computed<FeatureCollection<Polygon>>(() => {
 		// Group brønde by cluster_id for hull computation
 		const broende = this.broende();
+		const filter = this.filter();
 		const grupperByCluster = new Map<number, Brond[]>();
 		for (const b of broende) {
 			const key = b.clusterId ?? -1;
@@ -121,6 +122,29 @@ export class BrondDataService {
 		for (const [clusterId, gruppe] of grupperByCluster.entries()) {
 			// Require at least 3 points for a polygon
 			if (gruppe.length < 3) continue;
+
+			// Determine execution year (deterministic based on clusterId)
+			// 10% in 2025, 90% in 2026
+			const setTilUdfoerelseI = (clusterId % 10 === 0) ? 2025 : 2026;
+
+			// Apply date range filter
+			if (filter.dateRange) {
+				const startYear = filter.dateRange.start?.getFullYear();
+				const endYear = filter.dateRange.end?.getFullYear();
+
+				// Check if the execution year intersects with the selected date range
+				if (startYear && endYear) {
+					// Both dates set: year must be within range
+					if (setTilUdfoerelseI < startYear || setTilUdfoerelseI > endYear) continue;
+				} else if (startYear) {
+					// Only start date: year must be >= start year
+					if (setTilUdfoerelseI < startYear) continue;
+				} else if (endYear) {
+					// Only end date: year must be <= end year
+					if (setTilUdfoerelseI > endYear) continue;
+				}
+			}
+
 			const pts: Feature<Point>[] = gruppe.map((b) => turfPoint([b.longitude, b.latitude]));
 			const fc = turfFeatureCollection(pts);
 			// Adaptive maxEdge: scale with group spread, clamped to [0.08km, 0.2km]
@@ -152,6 +176,7 @@ export class BrondDataService {
 					id: clusterId,
 					antal_broende: gruppe.length,
 					color_index: (clusterId ?? 0) % 12,
+					setTilUdfoerelseI,
 				},
 			});
 		}

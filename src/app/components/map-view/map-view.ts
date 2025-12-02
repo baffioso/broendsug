@@ -285,6 +285,17 @@ export class MapView implements AfterViewInit {
         }
       }
     });
+
+    // Effect to update brondgrupper polygons when GeoJSON changes (e.g., due to filter)
+    effect(() => {
+      const fc = this.dataService.brondgrupperGeoJSON();
+      if (this.map && this.mapLoaded()) {
+        const gruppeSource = this.map.getSource('brondgrupper') as maplibregl.GeoJSONSource;
+        if (gruppeSource) {
+          gruppeSource.setData(fc as any);
+        }
+      }
+    });
   }
 
   ngAfterViewInit(): void {
