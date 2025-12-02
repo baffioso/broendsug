@@ -125,7 +125,7 @@ export class BrondDataService {
 
 			// Determine execution year (deterministic based on clusterId)
 			// 10% in 2025, 90% in 2026
-			const setTilUdfoerelseI = (clusterId % 10 === 0) ? 2025 : 2026;
+			const udfoerelsesAar = (clusterId % 10 === 0) ? 2025 : 2026;
 
 			// Apply date range filter
 			if (filter.dateRange) {
@@ -135,13 +135,13 @@ export class BrondDataService {
 				// Check if the execution year intersects with the selected date range
 				if (startYear && endYear) {
 					// Both dates set: year must be within range
-					if (setTilUdfoerelseI < startYear || setTilUdfoerelseI > endYear) continue;
+					if (udfoerelsesAar < startYear || udfoerelsesAar > endYear) continue;
 				} else if (startYear) {
 					// Only start date: year must be >= start year
-					if (setTilUdfoerelseI < startYear) continue;
+					if (udfoerelsesAar < startYear) continue;
 				} else if (endYear) {
 					// Only end date: year must be <= end year
-					if (setTilUdfoerelseI > endYear) continue;
+					if (udfoerelsesAar > endYear) continue;
 				}
 			}
 
@@ -176,7 +176,7 @@ export class BrondDataService {
 					id: clusterId,
 					antal_broende: gruppe.length,
 					color_index: (clusterId ?? 0) % 12,
-					setTilUdfoerelseI,
+					udfoerelsesAar,
 				},
 			});
 		}
